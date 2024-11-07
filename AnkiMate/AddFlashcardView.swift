@@ -15,7 +15,9 @@ struct AddFlashcardView: View {
 
     @State private var frontText: String
     @State private var backText: String
-    @State private var tagsText: String
+    @State private var newTagText = ""
+    @State private var selectedTags: Set<Tag> = [] // Теги для текущей карточки
+    @State private var availableTags: [Tag] = [] // Все доступные теги
     @State private var image: Data?
     @State private var showSaveSuccess = false
     @State private var selectedImage: PhotosPickerItem?
@@ -26,7 +28,7 @@ struct AddFlashcardView: View {
         self.flashcardToEdit = flashcardToEdit
         _frontText = State(initialValue: flashcardToEdit?.frontText ?? "")
         _backText = State(initialValue: flashcardToEdit?.backText ?? "")
-        _tagsText = State(initialValue: flashcardToEdit?.tags.joined(separator: ", ") ?? "")
+        _selectedTags = State(initialValue: Set(flashcardToEdit?.tags ?? []))
         _image = State(initialValue: flashcardToEdit?.image)
     }
 
@@ -39,7 +41,23 @@ struct AddFlashcardView: View {
                 }
                 
                 Section(header: Text("Tags")) {
-                    TextField("Enter tags separated by commas", text: $tagsText)
+                    TextField("Add new tag", text: $newTagText, onCommit: addNewTag)
+                        .textFieldStyle(.roundedBorder)
+                        .padding(.bottom, 5)
+                    
+                    // Все доступные теги
+                    Text("Available Tags:")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
+                        ForEach(availableTags, id: \.id) { tag in
+                            TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
+                                .onTapGesture {
+                                    toggleTagSelection(tag)
+                                }
+                        }
+                    }
                 }
 
                 Section(header: Text("Image")) {
@@ -85,11 +103,48 @@ struct AddFlashcardView: View {
             } message: {
                 Text("Your flashcard has been successfully \(flashcardToEdit == nil ? "saved" : "updated").")
             }
+            .onAppear {
+                loadAvailableTags()
+            }
+        }
+    }
+
+    private func loadAvailableTags() {
+        do {
+            // Запрос всех тегов из `modelContext`
+            availableTags = try modelContext.fetch(FetchDescriptor<Tag>()).sorted { $0.name < $1.name }
+        } catch {
+            print("Failed to fetch tags: \(error)")
+        }
+    }
+    
+    private func addNewTag() {
+        let trimmedTagName = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTagName.isEmpty else { return }
+        
+        // Проверяем, существует ли уже тег с таким именем
+        if let existingTag = availableTags.first(where: { $0.name == trimmedTagName }) {
+            selectedTags.insert(existingTag)
+        } else {
+            let newTag = Tag(name: trimmedTagName)
+            modelContext.insert(newTag)
+            availableTags.append(newTag)
+            selectedTags.insert(newTag)
+        }
+        
+        newTagText = ""
+    }
+    
+    private func toggleTagSelection(_ tag: Tag) {
+        if selectedTags.contains(tag) {
+            selectedTags.remove(tag)
+        } else {
+            selectedTags.insert(tag)
         }
     }
 
     private func saveFlashcard() {
-        let tags = tagsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        let tags = Array(selectedTags)
         
         if let flashcard = flashcardToEdit {
             flashcard.frontText = frontText
@@ -108,7 +163,8 @@ struct AddFlashcardView: View {
     private func clearFieldsForNextEntry() {
         frontText = ""
         backText = ""
-        tagsText = ""
+        selectedTags = []
+        newTagText = ""
         image = nil
     }
     

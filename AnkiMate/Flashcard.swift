@@ -13,7 +13,7 @@ final class Flashcard {
     @Attribute(.unique) var id: UUID = UUID()
     var frontText: String
     var backText: String
-    var tags: [String]
+    var tags: [Tag]
     var image: Data?
     var reviewDate: Date
     var status: ReviewStatus
@@ -23,12 +23,22 @@ final class Flashcard {
         case notRemembered
     }
     
-    init(frontText: String, backText: String, tags: [String] = [], image: Data? = nil, reviewDate: Date = Date(), status: ReviewStatus = .notRemembered) {
+    init(frontText: String, backText: String, tags: [Tag] = [], image: Data? = nil, reviewDate: Date = Date(), status: ReviewStatus = .notRemembered) {
         self.frontText = frontText
         self.backText = backText
         self.tags = tags
         self.image = image
         self.reviewDate = reviewDate
         self.status = status
+    }
+}
+
+@Model
+final class Tag {
+    @Attribute(.unique) var id: UUID = UUID()
+    var name: String
+    
+    init(name: String) {
+        self.name = name
     }
 }
