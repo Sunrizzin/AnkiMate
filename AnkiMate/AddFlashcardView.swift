@@ -5,9 +5,9 @@
 //  Created by Sunrizz on 7/11/24.
 //
 
-import SwiftUI
-import SwiftData
 import PhotosUI
+import SwiftData
+import SwiftUI
 
 struct AddFlashcardView: View {
     @Environment(\.modelContext) private var modelContext
@@ -39,17 +39,17 @@ struct AddFlashcardView: View {
                     TextField("Front Text", text: $frontText)
                     TextField("Back Text", text: $backText)
                 }
-                
+
                 Section(header: Text("Tags")) {
                     TextField("Add new tag", text: $newTagText, onCommit: addNewTag)
                         .textFieldStyle(.roundedBorder)
                         .padding(.bottom, 5)
-                    
+
                     // Все доступные теги
                     Text("Available Tags:")
                         .font(.subheadline)
                         .foregroundColor(.gray)
-                    
+
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
                         ForEach(availableTags, id: \.id) { tag in
                             TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
@@ -63,11 +63,11 @@ struct AddFlashcardView: View {
                 Section(header: Text("Image")) {
                     PhotosPicker("Select Image", selection: $selectedImage, matching: .images)
                         .onChange(of: selectedImage) { newItem in
-                            if let newItem = newItem {
+                            if let newItem {
                                 loadImage(from: newItem)
                             }
                         }
-                    
+
                     if let imageData = image, let uiImage = UIImage(data: imageData) {
                         Image(uiImage: uiImage)
                             .resizable()
@@ -75,7 +75,7 @@ struct AddFlashcardView: View {
                             .frame(height: 200)
                     }
                 }
-                
+
                 Section {
                     Button(action: saveFlashcard) {
                         Text(flashcardToEdit == nil ? "Save Flashcard" : "Update Flashcard")
@@ -117,11 +117,11 @@ struct AddFlashcardView: View {
             print("Failed to fetch tags: \(error)")
         }
     }
-    
+
     private func addNewTag() {
         let trimmedTagName = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTagName.isEmpty else { return }
-        
+
         // Проверяем, существует ли уже тег с таким именем
         if let existingTag = availableTags.first(where: { $0.name == trimmedTagName }) {
             selectedTags.insert(existingTag)
@@ -131,10 +131,10 @@ struct AddFlashcardView: View {
             availableTags.append(newTag)
             selectedTags.insert(newTag)
         }
-        
+
         newTagText = ""
     }
-    
+
     private func toggleTagSelection(_ tag: Tag) {
         if selectedTags.contains(tag) {
             selectedTags.remove(tag)
@@ -145,7 +145,7 @@ struct AddFlashcardView: View {
 
     private func saveFlashcard() {
         let tags = Array(selectedTags)
-        
+
         if let flashcard = flashcardToEdit {
             flashcard.frontText = frontText
             flashcard.backText = backText
@@ -155,11 +155,11 @@ struct AddFlashcardView: View {
             let newFlashcard = Flashcard(frontText: frontText, backText: backText, tags: tags, image: image, reviewDate: Date(), status: .notRemembered)
             modelContext.insert(newFlashcard)
         }
-        
+
         try? modelContext.save()
         showSaveSuccess = true
     }
-    
+
     private func clearFieldsForNextEntry() {
         frontText = ""
         backText = ""
@@ -167,11 +167,11 @@ struct AddFlashcardView: View {
         newTagText = ""
         image = nil
     }
-    
+
     private func loadImage(from pickerItem: PhotosPickerItem) {
         Task {
             if let data = try? await pickerItem.loadTransferable(type: Data.self) {
-                self.image = data
+                image = data
             }
         }
     }

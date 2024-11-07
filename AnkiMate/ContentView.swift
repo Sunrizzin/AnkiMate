@@ -31,7 +31,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Cards", systemImage: "list.bullet.circle")
             }
-            
+
             NavigationView {
                 StudyView()
                     .navigationTitle("Study")

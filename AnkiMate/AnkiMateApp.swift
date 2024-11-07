@@ -5,8 +5,8 @@
 //  Created by Sunrizz on 7/11/24.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @main
 struct AnkiMateApp: App {

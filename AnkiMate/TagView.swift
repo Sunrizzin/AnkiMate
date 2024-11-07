@@ -10,7 +10,7 @@ import SwiftUI
 struct TagView: View {
     let tag: String
     let isSelected: Bool
-    
+
     var body: some View {
         Text(tag)
             .padding(8)

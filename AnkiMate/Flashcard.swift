@@ -5,8 +5,8 @@
 //  Created by Sunrizz on 7/11/24.
 //
 
-import SwiftData
 import Foundation
+import SwiftData
 
 @Model
 final class Flashcard {
@@ -17,12 +17,12 @@ final class Flashcard {
     var image: Data?
     var reviewDate: Date
     var status: ReviewStatus
-    
+
     enum ReviewStatus: String, Codable {
         case remembered
         case notRemembered
     }
-    
+
     init(frontText: String, backText: String, tags: [Tag] = [], image: Data? = nil, reviewDate: Date = Date(), status: ReviewStatus = .notRemembered) {
         self.frontText = frontText
         self.backText = backText
@@ -37,7 +37,7 @@ final class Flashcard {
 final class Tag {
     @Attribute(.unique) var id: UUID = UUID()
     var name: String
-    
+
     init(name: String) {
         self.name = name
     }
