@@ -7,43 +7,115 @@
 
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct AddFlashcardView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+
     @State private var frontText: String
     @State private var backText: String
+    @State private var tagsText: String
+    @State private var image: Data?
+    @State private var showSaveSuccess = false
+    @State private var selectedImage: PhotosPickerItem?
+
     var flashcardToEdit: Flashcard?
+
     init(flashcardToEdit: Flashcard? = nil) {
         self.flashcardToEdit = flashcardToEdit
         _frontText = State(initialValue: flashcardToEdit?.frontText ?? "")
         _backText = State(initialValue: flashcardToEdit?.backText ?? "")
+        _tagsText = State(initialValue: flashcardToEdit?.tags.joined(separator: ", ") ?? "")
+        _image = State(initialValue: flashcardToEdit?.image)
     }
 
     var body: some View {
-        Form {
-            TextField("Front Text", text: $frontText)
-            TextField("Back Text", text: $backText)
-            
-            Button(flashcardToEdit == nil ? "Save Flashcard" : "Update Flashcard") {
-                if let flashcard = flashcardToEdit {
-                    flashcard.frontText = frontText
-                    flashcard.backText = backText
-                } else {
-                    let newFlashcard = Flashcard(frontText: frontText, backText: backText, reviewDate: Date(), status: .notRemembered)
-                    modelContext.insert(newFlashcard)
+        NavigationView {
+            Form {
+                Section(header: Text("Card Content")) {
+                    TextField("Front Text", text: $frontText)
+                    TextField("Back Text", text: $backText)
                 }
-                try? modelContext.save()
-                dismiss()
+                
+                Section(header: Text("Tags")) {
+                    TextField("Enter tags separated by commas", text: $tagsText)
+                }
+
+                Section(header: Text("Image")) {
+                    PhotosPicker("Select Image", selection: $selectedImage, matching: .images)
+                        .onChange(of: selectedImage) { newItem in
+                            if let newItem = newItem {
+                                loadImage(from: newItem)
+                            }
+                        }
+                    
+                    if let imageData = image, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 200)
+                    }
+                }
+                
+                Section {
+                    Button(action: saveFlashcard) {
+                        Text(flashcardToEdit == nil ? "Save Flashcard" : "Update Flashcard")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(frontText.isEmpty || backText.isEmpty)
+                }
             }
-            .buttonStyle(.borderedProminent)
-        }
-        .navigationTitle(flashcardToEdit == nil ? "Add New Flashcard" : "Edit Flashcard")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Close") {
+            .navigationTitle(flashcardToEdit == nil ? "Add New Flashcard" : "Edit Flashcard")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
+            .alert("Flashcard Saved!", isPresented: $showSaveSuccess) {
+                Button("OK", role: .cancel) {
                     dismiss()
                 }
+                Button("Add Next") {
+                    clearFieldsForNextEntry()
+                }
+            } message: {
+                Text("Your flashcard has been successfully \(flashcardToEdit == nil ? "saved" : "updated").")
+            }
+        }
+    }
+
+    private func saveFlashcard() {
+        let tags = tagsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        
+        if let flashcard = flashcardToEdit {
+            flashcard.frontText = frontText
+            flashcard.backText = backText
+            flashcard.tags = tags
+            flashcard.image = image
+        } else {
+            let newFlashcard = Flashcard(frontText: frontText, backText: backText, tags: tags, image: image, reviewDate: Date(), status: .notRemembered)
+            modelContext.insert(newFlashcard)
+        }
+        
+        try? modelContext.save()
+        showSaveSuccess = true
+    }
+    
+    private func clearFieldsForNextEntry() {
+        frontText = ""
+        backText = ""
+        tagsText = ""
+        image = nil
+    }
+    
+    private func loadImage(from pickerItem: PhotosPickerItem) {
+        Task {
+            if let data = try? await pickerItem.loadTransferable(type: Data.self) {
+                self.image = data
             }
         }
     }

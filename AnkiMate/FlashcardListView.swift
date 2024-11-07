@@ -11,50 +11,58 @@ import SwiftData
 struct FlashcardListView: View {
     @Query var flashcards: [Flashcard]
     @Environment(\.modelContext) private var modelContext
-    @State private var isEditPresented = false
-    @State private var selectedFlashcard: Flashcard?
-    @State private var flashcardToDelete: Flashcard?
-    @State private var showDeleteConfirmation = false
+    @State private var selectedTag: String?
+    @State private var showRememberedOnly = false
+
+    // Уникальные теги из всех карточек
+    private var uniqueTags: [String] {
+        Array(Set(flashcards.flatMap { $0.tags })).sorted()
+    }
 
     var body: some View {
-        List {
-            ForEach(flashcards) { flashcard in
+            List(filteredFlashcards()) { flashcard in
                 VStack(alignment: .leading) {
                     Text(flashcard.frontText)
                         .font(.headline)
                     Text(flashcard.backText)
                         .font(.subheadline)
                 }
-                .contentShape(Rectangle())
                 .swipeActions(edge: .trailing) {
                     Button("Delete", role: .destructive) {
-                        flashcardToDelete = flashcard
-                        showDeleteConfirmation.toggle()
+                        modelContext.delete(flashcard)
+                        try? modelContext.save()
                     }
-                    
-                    Button("Edit") {
-                        selectedFlashcard = flashcard
-                        isEditPresented.toggle()
-                    }
-                    .tint(.blue)
                 }
             }
-        }
-        .navigationTitle("Flashcards")
-        .sheet(isPresented: $isEditPresented) {
-            if let selectedFlashcard = selectedFlashcard {
-                AddFlashcardView(flashcardToEdit: selectedFlashcard)
-            }
-        }
-        .confirmationDialog("Are you sure you want to delete this card?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                if let flashcardToDelete = flashcardToDelete {
-                    modelContext.delete(flashcardToDelete)
-                    try? modelContext.save()
+            .navigationTitle("Flashcards")
+            .toolbar {
+                ToolbarItem(placement: .bottomBar) {
+                    Menu {
+                        Button("All Tags") { selectedTag = nil }
+                        Divider()
+                        ForEach(uniqueTags, id: \.self) { tag in
+                            Button(tag) { selectedTag = tag }
+                        }
+                    } label: {
+                        Label("Tags", systemImage: "tag")
+                    }
+                }
+                
+                ToolbarItem(placement: .bottomBar) {
+                    Toggle("Not Remembered Only", isOn: $showRememberedOnly)
                 }
             }
-            Button("Cancel", role: .cancel) {}
+    }
+    
+    private func filteredFlashcards() -> [Flashcard] {
+        var filtered = flashcards
+        if showRememberedOnly {
+            filtered = filtered.filter { $0.status == .notRemembered }
         }
+        if let tag = selectedTag {
+            filtered = filtered.filter { $0.tags.contains(tag) }
+        }
+        return filtered
     }
 }
 
