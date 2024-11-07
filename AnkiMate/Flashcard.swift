@@ -1,0 +1,35 @@
+//
+//  Flashcard.swift
+//  AnkiMate
+//
+//  Created by Sunrizz on 7/11/24.
+//
+
+
+import SwiftData
+import Foundation
+
+@Model
+final class Flashcard {
+    @Attribute(.unique) var id: UUID = UUID()
+    var frontText: String
+    var backText: String
+    var tags: [String]
+    var image: Data? // Используем Data для хранения изображения
+    var reviewDate: Date
+    var status: ReviewStatus
+    
+    enum ReviewStatus: String, Codable {
+        case remembered
+        case notRemembered
+    }
+    
+    init(frontText: String, backText: String, tags: [String] = [], image: Data? = nil, reviewDate: Date = Date(), status: ReviewStatus = .notRemembered) {
+        self.frontText = frontText
+        self.backText = backText
+        self.tags = tags
+        self.image = image
+        self.reviewDate = reviewDate
+        self.status = status
+    }
+}
