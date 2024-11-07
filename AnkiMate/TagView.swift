@@ -13,7 +13,8 @@ struct TagView: View {
 
     var body: some View {
         Text(tag)
-            .padding(8)
+            .font(.footnote)
+            .padding(6)
             .background(isSelected ? Color.blue : Color.gray.opacity(0.3))
             .cornerRadius(10)
             .foregroundColor(isSelected ? .white : .black)

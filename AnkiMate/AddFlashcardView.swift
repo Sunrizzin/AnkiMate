@@ -16,8 +16,8 @@ struct AddFlashcardView: View {
     @State private var frontText: String
     @State private var backText: String
     @State private var newTagText = ""
-    @State private var selectedTags: Set<Tag> = [] // Теги для текущей карточки
-    @State private var availableTags: [Tag] = [] // Все доступные теги
+    @State private var selectedTags: Set<Tag> = []
+    @State private var availableTags: [Tag] = []
     @State private var image: Data?
     @State private var showSaveSuccess = false
     @State private var selectedImage: PhotosPickerItem?
@@ -45,7 +45,6 @@ struct AddFlashcardView: View {
                         .textFieldStyle(.roundedBorder)
                         .padding(.bottom, 5)
 
-                    // Все доступные теги
                     Text("Available Tags:")
                         .font(.subheadline)
                         .foregroundColor(.gray)
@@ -111,7 +110,6 @@ struct AddFlashcardView: View {
 
     private func loadAvailableTags() {
         do {
-            // Запрос всех тегов из `modelContext`
             availableTags = try modelContext.fetch(FetchDescriptor<Tag>()).sorted { $0.name < $1.name }
         } catch {
             print("Failed to fetch tags: \(error)")
@@ -122,7 +120,6 @@ struct AddFlashcardView: View {
         let trimmedTagName = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTagName.isEmpty else { return }
 
-        // Проверяем, существует ли уже тег с таким именем
         if let existingTag = availableTags.first(where: { $0.name == trimmedTagName }) {
             selectedTags.insert(existingTag)
         } else {

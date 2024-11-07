@@ -15,11 +15,9 @@ struct FlashcardListView: View {
     @State private var showRememberedOnly = false
     @State private var searchText = ""
 
-    // Все теги
     @State private var allTags: [Tag] = []
-    @State private var tagColors: [UUID: Color] = [:] // Используем UUID для ключей цветов
+    @State private var tagColors: [UUID: Color] = [:]
 
-    // Уникальные теги из всех карточек
     private var uniqueTags: [Tag] {
         allTags.sorted { $0.name < $1.name }
     }
@@ -34,7 +32,6 @@ struct FlashcardListView: View {
                     Text(flashcard.backText)
                         .font(.subheadline)
 
-                    // Отображение тегов карточки с выделением выбранных тегов
                     HStack {
                         ForEach(flashcard.tags, id: \.id) { tag in
                             TagView(tag: tag.name, isSelected: selectedTag == tag)
@@ -52,7 +49,7 @@ struct FlashcardListView: View {
                 }
             }
         }
-        .navigationTitle("Flashcards")
+        .navigationTitle("Anki Mate")
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Menu {
@@ -77,7 +74,6 @@ struct FlashcardListView: View {
         .searchable(text: $searchText, prompt: "Search flashcards")
     }
 
-    // Метод для удаления карточки
     private func deleteFlashcard(_ flashcard: Flashcard) {
         modelContext.delete(flashcard)
         try? modelContext.save()
@@ -85,7 +81,6 @@ struct FlashcardListView: View {
 
     private func loadAllTags() {
         do {
-            // Загружаем все теги из хранилища
             allTags = try modelContext.fetch(FetchDescriptor<Tag>())
         } catch {
             print("Ошибка при загрузке всех тегов: \(error)")
