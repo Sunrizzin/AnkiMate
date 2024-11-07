@@ -10,12 +10,11 @@ import SwiftUI
 
 struct FlashcardListView: View {
     @Query var flashcards: [Flashcard]
+    @Query var allTags: [Tag]
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTag: Tag?
     @State private var showRememberedOnly = false
     @State private var searchText = ""
-
-    @State private var allTags: [Tag] = []
     @State private var tagColors: [UUID: Color] = [:]
 
     private var uniqueTags: [Tag] {
@@ -83,10 +82,6 @@ struct FlashcardListView: View {
     private func loadAllTags() {
         do {
             let allFetchedTags = try modelContext.fetch(FetchDescriptor<Tag>())
-
-            allTags = allFetchedTags.filter { tag in
-                flashcards.contains { $0.tags.contains(tag) }
-            }
 
             for tag in allFetchedTags where !allTags.contains(tag) {
                 modelContext.delete(tag)

@@ -123,7 +123,7 @@ struct AddFlashcardView: View {
         if !trimmedTagName.hasPrefix("#") {
             trimmedTagName = "#" + trimmedTagName
         }
-        
+
         guard !trimmedTagName.isEmpty else { return }
 
         if let existingTag = availableTags.first(where: { $0.name == trimmedTagName }) {

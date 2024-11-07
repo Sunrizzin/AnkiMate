@@ -20,7 +20,7 @@ struct ContentView: View {
                                 isAddCardPresented.toggle()
                             }) {
                                 Image(systemName: "plus.circle.fill")
-                                    .font(.title2)
+                                    .hoverEffect()
                             }
                         }
                     }
