@@ -45,23 +45,25 @@ struct AddFlashcardView: View {
                         .textFieldStyle(.roundedBorder)
                         .padding(.bottom, 5)
 
-                    Text("Available Tags:")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
+                    if !availableTags.isEmpty {
+                        Text("Available Tags:")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
 
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
-                        ForEach(availableTags, id: \.id) { tag in
-                            TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
-                                .onTapGesture {
-                                    toggleTagSelection(tag)
-                                }
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
+                            ForEach(availableTags, id: \.id) { tag in
+                                TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
+                                    .onTapGesture {
+                                        toggleTagSelection(tag)
+                                    }
+                            }
                         }
                     }
                 }
 
                 Section(header: Text("Image")) {
                     PhotosPicker("Select Image", selection: $selectedImage, matching: .images)
-                        .onChange(of: selectedImage) { newItem in
+                        .onChange(of: selectedImage) { newItem, _ in
                             if let newItem {
                                 loadImage(from: newItem)
                             }
@@ -71,7 +73,7 @@ struct AddFlashcardView: View {
                         Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFit()
-                            .frame(height: 200)
+                            .frame(height: 100)
                     }
                 }
 
@@ -117,7 +119,11 @@ struct AddFlashcardView: View {
     }
 
     private func addNewTag() {
-        let trimmedTagName = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+        var trimmedTagName = newTagText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !trimmedTagName.hasPrefix("#") {
+            trimmedTagName = "#" + trimmedTagName
+        }
+        
         guard !trimmedTagName.isEmpty else { return }
 
         if let existingTag = availableTags.first(where: { $0.name == trimmedTagName }) {
@@ -125,10 +131,9 @@ struct AddFlashcardView: View {
         } else {
             let newTag = Tag(name: trimmedTagName)
             modelContext.insert(newTag)
-            availableTags.append(newTag)
             selectedTags.insert(newTag)
+            loadAvailableTags()
         }
-
         newTagText = ""
     }
 
@@ -155,6 +160,7 @@ struct AddFlashcardView: View {
 
         try? modelContext.save()
         showSaveSuccess = true
+        loadAvailableTags()
     }
 
     private func clearFieldsForNextEntry() {
@@ -163,6 +169,7 @@ struct AddFlashcardView: View {
         selectedTags = []
         newTagText = ""
         image = nil
+        loadAvailableTags()
     }
 
     private func loadImage(from pickerItem: PhotosPickerItem) {

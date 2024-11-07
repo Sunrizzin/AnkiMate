@@ -77,11 +77,22 @@ struct FlashcardListView: View {
     private func deleteFlashcard(_ flashcard: Flashcard) {
         modelContext.delete(flashcard)
         try? modelContext.save()
+        loadAllTags()
     }
 
     private func loadAllTags() {
         do {
-            allTags = try modelContext.fetch(FetchDescriptor<Tag>())
+            let allFetchedTags = try modelContext.fetch(FetchDescriptor<Tag>())
+
+            allTags = allFetchedTags.filter { tag in
+                flashcards.contains { $0.tags.contains(tag) }
+            }
+
+            for tag in allFetchedTags where !allTags.contains(tag) {
+                modelContext.delete(tag)
+            }
+
+            try? modelContext.save()
         } catch {
             print("Ошибка при загрузке всех тегов: \(error)")
         }
