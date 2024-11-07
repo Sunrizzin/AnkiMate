@@ -12,17 +12,15 @@ struct FlashcardListView: View {
     @Query var flashcards: [Flashcard]
     
     var body: some View {
-        NavigationView {
-            List(flashcards) { flashcard in
-                VStack(alignment: .leading) {
-                    Text(flashcard.frontText)
-                        .font(.headline)
-                    Text(flashcard.backText)
-                        .font(.subheadline)
-                }
+        List(flashcards) { flashcard in
+            VStack(alignment: .leading) {
+                Text(flashcard.frontText)
+                    .font(.headline)
+                Text(flashcard.backText)
+                    .font(.subheadline)
             }
-            .navigationTitle("Flashcards")
         }
+        .navigationTitle("Flashcards")
     }
 }
 

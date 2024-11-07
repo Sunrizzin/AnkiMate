@@ -31,20 +31,20 @@ struct StudyView: View {
                 .padding(.bottom, 20)
                 
                 HStack {
-                    Button("Не помню") {
+                    Button("Forgot") {
                         updateFlashcardStatus(currentFlashcard, remembered: false)
                         showNextFlashcard()
                     }
                     .padding()
                     
-                    Button("Помню") {
+                    Button("Remembered") {
                         updateFlashcardStatus(currentFlashcard, remembered: true)
                         showNextFlashcard()
                     }
                     .padding()
                 }
             } else {
-                Text("Нет карточек для изучения")
+                Text("No cards to study")
             }
         }
         .navigationTitle("Study Mode")

@@ -15,7 +15,7 @@ final class Flashcard {
     var frontText: String
     var backText: String
     var tags: [String]
-    var image: Data? // Используем Data для хранения изображения
+    var image: Data?
     var reviewDate: Date
     var status: ReviewStatus
     

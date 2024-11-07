@@ -6,35 +6,39 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
+    @State private var isAddCardPresented = false
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                NavigationLink("Card list", destination: FlashcardListView())
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                
-                NavigationLink("New card", destination: AddFlashcardView())
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                
-                NavigationLink("Study", destination: StudyView())
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.orange)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+        TabView {
+            NavigationView {
+                FlashcardListView()
+                    .navigationTitle("Cards")
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button(action: {
+                                isAddCardPresented.toggle()
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                            }
+                        }
+                    }
+                    .sheet(isPresented: $isAddCardPresented) {
+                        AddFlashcardView()
+                    }
             }
-            .padding()
-            .navigationTitle("Anki Mate")
+            .tabItem {
+                Label("Cards", systemImage: "list.bullet.circle")
+            }
+            
+            NavigationView {
+                StudyView()
+                    .navigationTitle("Study")
+            }
+            .tabItem {
+                Label("Study", systemImage: "book.circle")
+            }
         }
     }
 }
