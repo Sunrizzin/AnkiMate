@@ -10,23 +10,42 @@ import SwiftData
 
 struct AddFlashcardView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss // Для закрытия модального окна
-    @State private var frontText: String = ""
-    @State private var backText: String = ""
-    
+    @Environment(\.dismiss) private var dismiss
+    @State private var frontText: String
+    @State private var backText: String
+    var flashcardToEdit: Flashcard?
+    init(flashcardToEdit: Flashcard? = nil) {
+        self.flashcardToEdit = flashcardToEdit
+        _frontText = State(initialValue: flashcardToEdit?.frontText ?? "")
+        _backText = State(initialValue: flashcardToEdit?.backText ?? "")
+    }
+
     var body: some View {
         Form {
             TextField("Front Text", text: $frontText)
             TextField("Back Text", text: $backText)
             
-            Button("Save Flashcard") {
-                let newFlashcard = Flashcard(frontText: frontText, backText: backText, reviewDate: Date(), status: .notRemembered)
-                modelContext.insert(newFlashcard)
+            Button(flashcardToEdit == nil ? "Save Flashcard" : "Update Flashcard") {
+                if let flashcard = flashcardToEdit {
+                    flashcard.frontText = frontText
+                    flashcard.backText = backText
+                } else {
+                    let newFlashcard = Flashcard(frontText: frontText, backText: backText, reviewDate: Date(), status: .notRemembered)
+                    modelContext.insert(newFlashcard)
+                }
                 try? modelContext.save()
-                dismiss() // Закрытие модального окна
+                dismiss()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .navigationTitle(flashcardToEdit == nil ? "Add New Flashcard" : "Edit Flashcard")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Close") {
+                    dismiss()
+                }
             }
         }
-        .navigationTitle("Add New Flashcard")
     }
 }
 

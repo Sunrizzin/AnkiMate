@@ -14,19 +14,32 @@ struct StudyView: View {
     @State private var currentIndex = 0
     @State private var isAnswerShown = false
     
+    var progress: Double {
+        guard !flashcards.isEmpty else { return 0 }
+        return Double(currentIndex + 1) / Double(flashcards.count)
+    }
+
     var body: some View {
         VStack {
+            ProgressView(value: progress)
+                .padding()
+                .accentColor(.green)
+                .progressViewStyle(LinearProgressViewStyle())
+            
             if !flashcards.isEmpty {
                 let currentFlashcard = flashcards[currentIndex]
                 
                 Text(isAnswerShown ? currentFlashcard.backText : currentFlashcard.frontText)
                     .font(.title)
                     .padding()
+                    .transition(.slide) // Анимация при смене карточки
                 
                 Spacer()
                 
                 Button(isAnswerShown ? "Hide Answer" : "Show Answer") {
-                    isAnswerShown.toggle()
+                    withAnimation {
+                        isAnswerShown.toggle()
+                    }
                 }
                 .padding(.bottom, 20)
                 
@@ -36,12 +49,16 @@ struct StudyView: View {
                         showNextFlashcard()
                     }
                     .padding()
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(8)
                     
                     Button("Remembered") {
                         updateFlashcardStatus(currentFlashcard, remembered: true)
                         showNextFlashcard()
                     }
                     .padding()
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(8)
                 }
             } else {
                 Text("No cards to study")
@@ -61,10 +78,12 @@ struct StudyView: View {
     }
     
     private func showNextFlashcard() {
-        if currentIndex < flashcards.count - 1 {
-            currentIndex += 1
-        } else {
-            currentIndex = 0
+        withAnimation {
+            if currentIndex < flashcards.count - 1 {
+                currentIndex += 1
+            } else {
+                currentIndex = 0
+            }
         }
     }
 }
