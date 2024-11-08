@@ -18,6 +18,8 @@ struct FlashcardListView: View {
     @State private var searchText = ""
 
     @State var editFlashcard: Flashcard? = nil
+    @State private var flashcardToDelete: Flashcard?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         List {
@@ -25,7 +27,8 @@ struct FlashcardListView: View {
                 CardView(card: flashcard, selectedTag: $selectedTag)
                     .swipeActions(edge: .trailing) {
                         Button("Delete", role: .destructive) {
-                            deleteFlashcard(flashcard)
+                            flashcardToDelete = flashcard
+                            showDeleteConfirmation.toggle()
                         }
                         Button("Edit", role: .cancel) {
                             editFlashcard(flashcard)
@@ -74,6 +77,14 @@ struct FlashcardListView: View {
         }
         .sheet(isPresented: $isAddCardPresented) {
             AddFlashcardView(flashcardToEdit: $editFlashcard)
+        }
+        .confirmationDialog("Are you sure you want to delete this flashcard?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                if let flashcard = flashcardToDelete {
+                    deleteFlashcard(flashcard)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .searchable(text: $searchText, prompt: "Search flashcards")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
