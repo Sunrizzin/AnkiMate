@@ -38,7 +38,7 @@ struct FlashcardListView: View {
         }
         .navigationTitle("Anki Mate")
         .toolbar {
-            ToolbarItem(placement: .navigation) {
+            ToolbarItem(placement: .bottomBar) {
                 Menu {
                     Button("Clear filter") {
                         withAnimation {
@@ -60,7 +60,7 @@ struct FlashcardListView: View {
                 .disabled(tags.isEmpty)
             }
 
-            ToolbarItem(placement: .navigation) {
+            ToolbarItem(placement: .bottomBar) {
                 Toggle("Not Remembered Only", isOn: $showRememberedOnly)
                     .disabled(flashcards.isEmpty)
             }

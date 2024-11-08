@@ -9,7 +9,15 @@ import SwiftUI
 
 struct SettingsView: View {
     var body: some View {
-        Text("Settings is here")
+        Form {
+            Section {
+                HStack {
+                    Text(UIDevice.current.systemName)
+                    Spacer()
+                    Text(UIDevice.current.systemVersion)
+                }
+            }
+        }
     }
 }
 
