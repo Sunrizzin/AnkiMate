@@ -52,13 +52,8 @@ struct AddFlashcardView: View {
 
                 Section(header: Text("Tags")) {
                     TextField("Write new tag", text: $newTagText, onCommit: addNewTag)
-                        .keyboardType(.asciiCapable)
+                        .textInputAutocapitalization(.never)
                     if !tags.isEmpty {
-                        Text("Available Tags:")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .monospaced()
-
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack {
                                 ForEach(filteredTags, id: \.id) { tag in

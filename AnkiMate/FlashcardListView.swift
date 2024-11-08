@@ -58,36 +58,13 @@ struct FlashcardListView: View {
                 Toggle("Not Remembered Only", isOn: $showRememberedOnly)
             }
         }
-        .onAppear {
-            loadAllTags()
-        }
         .searchable(text: $searchText, prompt: "Search flashcards")
-        .searchSuggestions {
-            ForEach(uniqueTags, id: \.id) { tag in
-                Text(tag.name)
-                    .searchCompletion(tag.name)
-            }
-        }
+        .searchPresentationToolbarBehavior(.avoidHidingContent)
     }
 
     private func deleteFlashcard(_ flashcard: Flashcard) {
         modelContext.delete(flashcard)
         try? modelContext.save()
-        loadAllTags()
-    }
-
-    private func loadAllTags() {
-        do {
-            let allFetchedTags = try modelContext.fetch(FetchDescriptor<Tag>())
-
-            for tag in allFetchedTags where !tags.contains(tag) {
-                modelContext.delete(tag)
-            }
-
-            try? modelContext.save()
-        } catch {
-            print("Ошибка при загрузке всех тегов: \(error)")
-        }
     }
 
     private func filteredFlashcards() -> [Flashcard] {
