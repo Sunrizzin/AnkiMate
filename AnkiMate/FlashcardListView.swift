@@ -24,41 +24,33 @@ struct FlashcardListView: View {
     var body: some View {
         List {
             ForEach(filteredFlashcards()) { flashcard in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(flashcard.frontText)
-                        .font(.headline)
-
-                    Text(flashcard.backText)
-                        .font(.subheadline)
-
-                    HStack {
-                        ForEach(flashcard.tags, id: \.id) { tag in
-                            TagView(tag: tag.name, isSelected: selectedTag == tag)
-                                .onTapGesture {
-                                    selectedTag = (selectedTag == tag) ? nil : tag
-                                }
+                CardView(card: flashcard, selectedTag: $selectedTag)
+                    .swipeActions(edge: .trailing) {
+                        Button("Delete", role: .destructive) {
+                            deleteFlashcard(flashcard)
                         }
                     }
-                }
-                .padding(.vertical, 5)
-                .swipeActions(edge: .trailing) {
-                    Button("Delete", role: .destructive) {
-                        deleteFlashcard(flashcard)
-                    }
-                }
             }
         }
         .navigationTitle("Anki Mate")
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Menu {
-                    Button("All Tags") { selectedTag = nil }
+                    Button("All Tags") {
+                        withAnimation {
+                            selectedTag = nil
+                        }
+                    }
                     Divider()
                     ForEach(uniqueTags, id: \.id) { tag in
-                        Button(tag.name) { selectedTag = tag }
+                        Button(tag.name) {
+                            withAnimation {
+                                selectedTag = tag
+                            }
+                        }
                     }
                 } label: {
-                    Label("Tags", systemImage: "tag")
+                    Label("Tags", systemImage: selectedTag == nil ? "tag" : "tag.fill")
                 }
             }
 
@@ -68,7 +60,6 @@ struct FlashcardListView: View {
         }
         .onAppear {
             loadAllTags()
-            generateTagColors()
         }
         .searchable(text: $searchText, prompt: "Search flashcards")
     }
@@ -90,18 +81,6 @@ struct FlashcardListView: View {
             try? modelContext.save()
         } catch {
             print("Ошибка при загрузке всех тегов: \(error)")
-        }
-    }
-
-    private func generateTagColors() {
-        for tag in allTags {
-            if tagColors[tag.id] == nil {
-                tagColors[tag.id] = Color(
-                    red: Double.random(in: 0.5 ... 1.0),
-                    green: Double.random(in: 0.5 ... 1.0),
-                    blue: Double.random(in: 0.5 ... 1.0)
-                )
-            }
         }
     }
 

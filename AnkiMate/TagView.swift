@@ -14,14 +14,15 @@ struct TagView: View {
     var body: some View {
         Text(tag)
             .font(.footnote)
+            .monospaced()
             .padding(6)
             .background(isSelected ? Color.blue : Color.gray.opacity(0.3))
-            .cornerRadius(10)
+            .cornerRadius(4)
             .foregroundColor(isSelected ? .white : .black)
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 4)
                     .stroke(Color.blue, lineWidth: isSelected ? 2 : 0)
             )
-            .animation(.easeInOut, value: isSelected)
+            .animation(.spring, value: isSelected)
     }
 }
