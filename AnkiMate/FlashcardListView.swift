@@ -10,14 +10,14 @@ import SwiftUI
 
 struct FlashcardListView: View {
     @Query var flashcards: [Flashcard]
-    @Query var allTags: [Tag]
+    @Query var tags: [Tag]
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTag: Tag?
     @State private var showRememberedOnly = false
     @State private var searchText = ""
 
     private var uniqueTags: [Tag] {
-        allTags.sorted { $0.name < $1.name }
+        tags.sorted { $0.name < $1.name }
     }
 
     var body: some View {
@@ -35,7 +35,7 @@ struct FlashcardListView: View {
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Menu {
-                    Button("All Tags") {
+                    Button("Clear filter") {
                         withAnimation {
                             selectedTag = nil
                         }
@@ -47,6 +47,7 @@ struct FlashcardListView: View {
                                 selectedTag = tag
                             }
                         }
+                        .monospaced()
                     }
                 } label: {
                     Label("Tags", systemImage: selectedTag == nil ? "tag" : "tag.fill")
@@ -79,7 +80,7 @@ struct FlashcardListView: View {
         do {
             let allFetchedTags = try modelContext.fetch(FetchDescriptor<Tag>())
 
-            for tag in allFetchedTags where !allTags.contains(tag) {
+            for tag in allFetchedTags where !tags.contains(tag) {
                 modelContext.delete(tag)
             }
 

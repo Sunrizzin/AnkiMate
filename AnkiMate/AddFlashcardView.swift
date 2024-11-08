@@ -13,11 +13,12 @@ struct AddFlashcardView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    @Query var tags: [Tag]
+
     @State private var frontText: String
     @State private var backText: String
     @State private var newTagText = ""
     @State private var selectedTags: Set<Tag> = []
-    @State private var availableTags: [Tag] = []
     @State private var image: Data?
     @State private var showSaveSuccess = false
     @State private var selectedImage: PhotosPickerItem?
@@ -37,25 +38,27 @@ struct AddFlashcardView: View {
             Form {
                 Section(header: Text("Card Content")) {
                     TextField("Front Text", text: $frontText)
+                        .focusable()
                     TextField("Back Text", text: $backText)
                 }
 
                 Section(header: Text("Tags")) {
-                    TextField("Add new tag", text: $newTagText, onCommit: addNewTag)
-                        .textFieldStyle(.roundedBorder)
-                        .padding(.bottom, 5)
+                    TextField("Write new tag", text: $newTagText, onCommit: addNewTag)
 
-                    if !availableTags.isEmpty {
+                    if !tags.isEmpty {
                         Text("Available Tags:")
                             .font(.subheadline)
                             .foregroundColor(.gray)
+                            .monospaced()
 
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
-                            ForEach(availableTags, id: \.id) { tag in
-                                TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
-                                    .onTapGesture {
-                                        toggleTagSelection(tag)
-                                    }
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(tags, id: \.id) { tag in
+                                    TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
+                                        .onTapGesture {
+                                            toggleTagSelection(tag)
+                                        }
+                                }
                             }
                         }
                     }
@@ -79,12 +82,12 @@ struct AddFlashcardView: View {
             }
             .navigationTitle(flashcardToEdit == nil ? "Add New Flashcard" : "Edit Flashcard")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                ToolbarItem(placement: .bottomBar) {
+                    Button("Cancel") {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .bottomBar) {
                     Button(flashcardToEdit == nil ? "Save" : "Update") {
                         saveFlashcard()
                     }
@@ -101,17 +104,6 @@ struct AddFlashcardView: View {
             } message: {
                 Text("Your flashcard has been successfully \(flashcardToEdit == nil ? "saved" : "updated").")
             }
-            .onAppear {
-                loadAvailableTags()
-            }
-        }
-    }
-
-    private func loadAvailableTags() {
-        do {
-            availableTags = try modelContext.fetch(FetchDescriptor<Tag>()).sorted { $0.name < $1.name }
-        } catch {
-            print("Failed to fetch tags: \(error)")
         }
     }
 
@@ -123,13 +115,12 @@ struct AddFlashcardView: View {
 
         guard !trimmedTagName.isEmpty else { return }
 
-        if let existingTag = availableTags.first(where: { $0.name == trimmedTagName }) {
+        if let existingTag = tags.first(where: { $0.name == trimmedTagName }) {
             selectedTags.insert(existingTag)
         } else {
             let newTag = Tag(name: trimmedTagName)
             modelContext.insert(newTag)
             selectedTags.insert(newTag)
-            loadAvailableTags()
         }
         newTagText = ""
     }
@@ -157,7 +148,6 @@ struct AddFlashcardView: View {
 
         try? modelContext.save()
         showSaveSuccess = true
-        loadAvailableTags()
     }
 
     private func clearFieldsForNextEntry() {
@@ -166,7 +156,6 @@ struct AddFlashcardView: View {
         selectedTags = []
         newTagText = ""
         image = nil
-        loadAvailableTags()
     }
 
     private func loadImage(from pickerItem: PhotosPickerItem) {
