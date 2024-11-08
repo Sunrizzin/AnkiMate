@@ -16,7 +16,6 @@ struct CardView: View {
         VStack(alignment: .leading) {
             Text(card.frontText)
                 .font(.title3)
-
             Text(card.backText)
                 .font(.subheadline)
 
@@ -29,7 +28,6 @@ struct CardView: View {
                 }
             }
         }
-        .padding(.vertical, 5)
     }
 }
 

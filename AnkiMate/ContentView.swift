@@ -39,6 +39,13 @@ struct ContentView: View {
             .tabItem {
                 Label("Study", systemImage: "book.circle")
             }
+            NavigationView {
+                SettingsView()
+                    .navigationTitle("Settings")
+            }
+            .tabItem {
+                Label("Settings", systemImage: "gearshape")
+            }
         }
     }
 }

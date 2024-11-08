@@ -23,6 +23,10 @@ struct TagView: View {
                 RoundedRectangle(cornerRadius: 4)
                     .stroke(Color.blue, lineWidth: isSelected ? 2 : 0)
             )
-            .animation(.spring, value: isSelected)
+            .animation(.default, value: isSelected)
     }
+}
+
+#Preview {
+    TagView(tag: "tag1", isSelected: true)
 }
