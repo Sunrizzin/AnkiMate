@@ -13,6 +13,8 @@ struct AddFlashcardView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    @FocusState private var isTagTextFieldFocused: Bool
+
     @Query var tags: [Tag]
 
     @State private var frontText: String = ""
@@ -30,7 +32,11 @@ struct AddFlashcardView: View {
             ? tags
             : tags.filter { $0.name.lowercased().contains(newTagText.lowercased()) }
 
-        return filtered.sorted { selectedTags.contains($0) && !selectedTags.contains($1) }
+        if filtered.isEmpty {
+            return tags
+        } else {
+            return filtered.sorted { selectedTags.contains($0) && !selectedTags.contains($1) }
+        }
     }
 
     var body: some View {
@@ -43,6 +49,7 @@ struct AddFlashcardView: View {
 
                 Section(header: Text("Tags")) {
                     TextField("Write new tag", text: $newTagText, onCommit: addNewTag)
+                        .focused($isTagTextFieldFocused)
                         .textInputAutocapitalization(.never)
                     if !tags.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -116,8 +123,9 @@ struct AddFlashcardView: View {
         if !trimmedTagName.hasPrefix("#") {
             trimmedTagName = "#" + trimmedTagName
         }
-
-        guard !trimmedTagName.isEmpty else { return }
+        guard !trimmedTagName.isEmpty, trimmedTagName != "#" else {
+            return
+        }
 
         if let existingTag = tags.first(where: { $0.name == trimmedTagName }) {
             selectedTags.insert(existingTag)
@@ -126,7 +134,10 @@ struct AddFlashcardView: View {
             modelContext.insert(newTag)
             selectedTags.insert(newTag)
         }
-        newTagText = ""
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            newTagText = ""
+            isTagTextFieldFocused = false
+        }
     }
 
     private func toggleTagSelection(_ tag: Tag) {
