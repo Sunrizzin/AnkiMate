@@ -25,6 +25,14 @@ struct AddFlashcardView: View {
 
     var flashcardToEdit: Flashcard?
 
+    private var filteredTags: [Tag] {
+        let filtered = newTagText.isEmpty
+            ? tags
+            : tags.filter { $0.name.lowercased().contains(newTagText.lowercased()) }
+
+        return filtered.sorted { selectedTags.contains($0) && !selectedTags.contains($1) }
+    }
+
     init(flashcardToEdit: Flashcard? = nil) {
         self.flashcardToEdit = flashcardToEdit
         _frontText = State(initialValue: flashcardToEdit?.frontText ?? "")
@@ -44,7 +52,7 @@ struct AddFlashcardView: View {
 
                 Section(header: Text("Tags")) {
                     TextField("Write new tag", text: $newTagText, onCommit: addNewTag)
-
+                        .keyboardType(.asciiCapable)
                     if !tags.isEmpty {
                         Text("Available Tags:")
                             .font(.subheadline)
@@ -53,12 +61,13 @@ struct AddFlashcardView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack {
-                                ForEach(tags, id: \.id) { tag in
+                                ForEach(filteredTags, id: \.id) { tag in
                                     TagView(tag: tag.name, isSelected: selectedTags.contains(tag))
                                         .onTapGesture {
                                             toggleTagSelection(tag)
                                         }
                                 }
+                                .animation(.interactiveSpring, value: newTagText)
                             }
                         }
                     }
