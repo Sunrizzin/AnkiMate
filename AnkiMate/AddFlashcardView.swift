@@ -15,15 +15,15 @@ struct AddFlashcardView: View {
 
     @Query var tags: [Tag]
 
-    @State private var frontText: String
-    @State private var backText: String
+    @State private var frontText: String = ""
+    @State private var backText: String = ""
     @State private var newTagText = ""
     @State private var selectedTags: Set<Tag> = []
     @State private var image: Data?
     @State private var showSaveSuccess = false
     @State private var selectedImage: PhotosPickerItem?
 
-    var flashcardToEdit: Flashcard?
+    @Binding var flashcardToEdit: Flashcard?
 
     private var filteredTags: [Tag] {
         let filtered = newTagText.isEmpty
@@ -33,20 +33,11 @@ struct AddFlashcardView: View {
         return filtered.sorted { selectedTags.contains($0) && !selectedTags.contains($1) }
     }
 
-    init(flashcardToEdit: Flashcard? = nil) {
-        self.flashcardToEdit = flashcardToEdit
-        _frontText = State(initialValue: flashcardToEdit?.frontText ?? "")
-        _backText = State(initialValue: flashcardToEdit?.backText ?? "")
-        _selectedTags = State(initialValue: Set(flashcardToEdit?.tags ?? []))
-        _image = State(initialValue: flashcardToEdit?.image)
-    }
-
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Card Content")) {
                     TextField("Front Text", text: $frontText)
-                        .focusable()
                     TextField("Back Text", text: $backText)
                 }
 
@@ -86,16 +77,17 @@ struct AddFlashcardView: View {
             }
             .navigationTitle(flashcardToEdit == nil ? "Add New Flashcard" : "Edit Flashcard")
             .toolbar {
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button(flashcardToEdit == nil ? "Save" : "Update") {
                         saveFlashcard()
                     }
                     .disabled(frontText.isEmpty || backText.isEmpty)
+                    .animation(.default, value: frontText.isEmpty || backText.isEmpty)
                 }
             }
             .alert("Flashcard Saved!", isPresented: $showSaveSuccess) {
@@ -107,6 +99,14 @@ struct AddFlashcardView: View {
                 }
             } message: {
                 Text("Your flashcard has been successfully \(flashcardToEdit == nil ? "saved" : "updated").")
+            }
+        }
+        .onAppear {
+            if let flashcardToEdit {
+                frontText = flashcardToEdit.frontText
+                backText = flashcardToEdit.backText
+                selectedTags = Set(flashcardToEdit.tags)
+                image = flashcardToEdit.image
             }
         }
     }
@@ -172,6 +172,6 @@ struct AddFlashcardView: View {
 }
 
 #Preview {
-    AddFlashcardView()
+    AddFlashcardView(flashcardToEdit: .constant(nil))
         .modelContainer(for: Flashcard.self)
 }

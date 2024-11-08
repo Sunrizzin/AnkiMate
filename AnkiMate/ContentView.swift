@@ -8,25 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var isAddCardPresented = false
     var body: some View {
         TabView {
             NavigationView {
                 FlashcardListView()
                     .navigationTitle("Cards")
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button(action: {
-                                isAddCardPresented.toggle()
-                            }) {
-                                Image(systemName: "plus.circle.fill")
-                                    .hoverEffect()
-                            }
-                        }
-                    }
-                    .sheet(isPresented: $isAddCardPresented) {
-                        AddFlashcardView()
-                    }
             }
             .tabItem {
                 Label("Cards", systemImage: "list.bullet.circle")

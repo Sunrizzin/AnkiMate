@@ -12,13 +12,12 @@ struct FlashcardListView: View {
     @Query var flashcards: [Flashcard]
     @Query var tags: [Tag]
     @Environment(\.modelContext) private var modelContext
+    @State private var isAddCardPresented = false
     @State private var selectedTag: Tag?
     @State private var showRememberedOnly = false
     @State private var searchText = ""
 
-    private var uniqueTags: [Tag] {
-        tags.sorted { $0.name < $1.name }
-    }
+    @State var editFlashcard: Flashcard? = nil
 
     var body: some View {
         List {
@@ -28,12 +27,15 @@ struct FlashcardListView: View {
                         Button("Delete", role: .destructive) {
                             deleteFlashcard(flashcard)
                         }
+                        Button("Edit", role: .cancel) {
+                            editFlashcard(flashcard)
+                        }
                     }
             }
         }
         .navigationTitle("Anki Mate")
         .toolbar {
-            ToolbarItem(placement: .bottomBar) {
+            ToolbarItem(placement: .navigation) {
                 Menu {
                     Button("Clear filter") {
                         withAnimation {
@@ -41,7 +43,7 @@ struct FlashcardListView: View {
                         }
                     }
                     Divider()
-                    ForEach(uniqueTags, id: \.id) { tag in
+                    ForEach(tags, id: \.id) { tag in
                         Button(tag.name) {
                             withAnimation {
                                 selectedTag = tag
@@ -52,14 +54,34 @@ struct FlashcardListView: View {
                 } label: {
                     Label("Tags", systemImage: selectedTag == nil ? "tag" : "tag.fill")
                 }
+                .disabled(tags.isEmpty)
             }
 
-            ToolbarItem(placement: .bottomBar) {
+            ToolbarItem(placement: .navigation) {
                 Toggle("Not Remembered Only", isOn: $showRememberedOnly)
+                    .disabled(flashcards.isEmpty)
             }
+
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    editFlashcard = nil
+                    isAddCardPresented.toggle()
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .hoverEffect()
+                }
+            }
+        }
+        .sheet(isPresented: $isAddCardPresented) {
+            AddFlashcardView(flashcardToEdit: $editFlashcard)
         }
         .searchable(text: $searchText, prompt: "Search flashcards")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
+    }
+
+    private func editFlashcard(_ flashcard: Flashcard) {
+        editFlashcard = flashcard
+        isAddCardPresented.toggle()
     }
 
     private func deleteFlashcard(_ flashcard: Flashcard) {
