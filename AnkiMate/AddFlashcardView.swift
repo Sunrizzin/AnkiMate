@@ -76,15 +76,6 @@ struct AddFlashcardView: View {
                             .frame(height: 100)
                     }
                 }
-
-                Section {
-                    Button(action: saveFlashcard) {
-                        Text(flashcardToEdit == nil ? "Save Flashcard" : "Update Flashcard")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(frontText.isEmpty || backText.isEmpty)
-                }
             }
             .navigationTitle(flashcardToEdit == nil ? "Add New Flashcard" : "Edit Flashcard")
             .toolbar {
@@ -92,6 +83,12 @@ struct AddFlashcardView: View {
                     Button("Close") {
                         dismiss()
                     }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(flashcardToEdit == nil ? "Save" : "Update") {
+                        saveFlashcard()
+                    }
+                    .disabled(frontText.isEmpty || backText.isEmpty)
                 }
             }
             .alert("Flashcard Saved!", isPresented: $showSaveSuccess) {

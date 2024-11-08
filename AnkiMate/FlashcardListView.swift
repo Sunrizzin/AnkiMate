@@ -15,7 +15,6 @@ struct FlashcardListView: View {
     @State private var selectedTag: Tag?
     @State private var showRememberedOnly = false
     @State private var searchText = ""
-    @State private var tagColors: [UUID: Color] = [:]
 
     private var uniqueTags: [Tag] {
         allTags.sorted { $0.name < $1.name }
@@ -62,6 +61,12 @@ struct FlashcardListView: View {
             loadAllTags()
         }
         .searchable(text: $searchText, prompt: "Search flashcards")
+        .searchSuggestions {
+            ForEach(uniqueTags, id: \.id) { tag in
+                Text(tag.name)
+                    .searchCompletion(tag.name)
+            }
+        }
     }
 
     private func deleteFlashcard(_ flashcard: Flashcard) {
