@@ -157,7 +157,13 @@ struct AddFlashcardView: View {
             flashcard.tags = tags
             flashcard.image = image
         } else {
-            let newFlashcard = Flashcard(frontText: frontText, backText: backText, tags: tags, image: image, reviewDate: Date(), status: .notRemembered)
+            let newFlashcard = Flashcard(
+                frontText: frontText,
+                backText: backText,
+                tags: tags,
+                image: image,
+                reviewDate: .now
+            )
             modelContext.insert(newFlashcard)
         }
 

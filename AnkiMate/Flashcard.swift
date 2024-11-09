@@ -16,20 +16,19 @@ final class Flashcard {
     var tags: [Tag]
     var image: Data?
     var reviewDate: Date
-    var status: ReviewStatus
+    var easinessFactor: Double
+    var interval: Int
+    var repetitions: Int
 
-    enum ReviewStatus: String, Codable {
-        case remembered
-        case notRemembered
-    }
-
-    init(frontText: String, backText: String, tags: [Tag] = [], image: Data? = nil, reviewDate: Date = Date(), status: ReviewStatus = .notRemembered) {
+    init(frontText: String, backText: String, tags: [Tag] = [], image: Data? = nil, reviewDate: Date = Date(), easinessFactor: Double = 2.5, interval: Int = 0, repetitions: Int = 0) {
         self.frontText = frontText
         self.backText = backText
         self.tags = tags
         self.image = image
         self.reviewDate = reviewDate
-        self.status = status
+        self.easinessFactor = easinessFactor
+        self.interval = interval
+        self.repetitions = repetitions
     }
 }
 

@@ -14,7 +14,6 @@ struct FlashcardListView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var isAddCardPresented = false
     @State private var selectedTag: Tag?
-    @State private var showRememberedOnly = false
     @State private var searchText = ""
 
     @State var editFlashcard: Flashcard? = nil
@@ -60,11 +59,6 @@ struct FlashcardListView: View {
                 .disabled(tags.isEmpty)
             }
 
-            ToolbarItem(placement: .bottomBar) {
-                Toggle("Not Remembered Only", isOn: $showRememberedOnly)
-                    .disabled(flashcards.isEmpty)
-            }
-
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
                     editFlashcard = nil
@@ -102,10 +96,6 @@ struct FlashcardListView: View {
 
     private func filteredFlashcards() -> [Flashcard] {
         var filtered = flashcards
-
-        if showRememberedOnly {
-            filtered = filtered.filter { $0.status == .notRemembered }
-        }
 
         if let tag = selectedTag {
             filtered = filtered.filter { $0.tags.contains(tag) }

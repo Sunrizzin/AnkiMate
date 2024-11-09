@@ -42,8 +42,7 @@ struct CardView: View {
                 Tag(name: "tag3"),
             ],
             image: nil,
-            reviewDate: .now,
-            status: .notRemembered
+            reviewDate: .now
         ), selectedTag: .constant(nil)
     )
 }
