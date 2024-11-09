@@ -11,134 +11,160 @@ import SwiftUI
 struct StudyView: View {
     @Query(sort: \Flashcard.reviewDate, order: .forward) var flashcards: [Flashcard]
     @Environment(\.modelContext) private var modelContext
+
+    // State variables
+    @State private var sessionFlashcards: [Flashcard] = []
     @State private var currentIndex = 0
     @State private var isAnswerShown = false
+    @State private var sessionStarted = false
     @State private var sessionCompleted = false
-    @State private var sessionFlashcards: [Flashcard] = []
 
+    // Computed properties
     var dueFlashcards: [Flashcard] {
         flashcards.filter { $0.reviewDate <= Date() }
     }
 
-    var progress: Double {
-        guard !sessionFlashcards.isEmpty else { return 0 }
-        return Double(currentIndex) / Double(sessionFlashcards.count)
+    var totalCards: Int {
+        sessionFlashcards.count
     }
 
     var body: some View {
         VStack {
-            ProgressView(value: progress)
-                .padding()
-                .accentColor(.green)
-                .progressViewStyle(LinearProgressViewStyle())
-                .opacity(sessionFlashcards.isEmpty ? 0 : 1)
-
-            if sessionCompleted {
-                // Session Completion View
-                VStack {
+            if !sessionStarted {
+                // Initial State
+                if dueFlashcards.isEmpty {
+                    // No cards available
                     Text("You've completed all cards for today!")
                         .font(.title)
                         .padding()
-
-                    HStack {
-                        Button(action: restartSession) {
-                            Text("Restart Session")
-                                .padding()
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-
-                        Button(action: {
-                            // Action to return to main menu or previous screen
-                        }) {
-                            Text("Main Menu")
-                                .padding()
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-                    }
-                }
-            } else if !sessionFlashcards.isEmpty, currentIndex < sessionFlashcards.count {
-                let currentFlashcard = sessionFlashcards[currentIndex]
-
-                VStack {
-                    Text(currentFlashcard.frontText)
-                        .font(.title)
+                } else {
+                    // Cards are available
+                    Text("Cards available to study: \(dueFlashcards.count)")
+                        .font(.title2)
                         .padding()
-                        .transition(.slide)
 
-                    if isAnswerShown {
-                        Divider()
-                            .padding(.vertical)
-
-                        Text(currentFlashcard.backText)
-                            .font(.title2)
+                    Button(action: startSession) {
+                        Text("Start Session")
+                            .font(.headline)
                             .padding()
-                            .transition(.slide)
-
-                        if let imageData = currentFlashcard.image,
-                           let uiImage = UIImage(data: imageData)
-                        {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 200)
-                                .padding()
-                        }
-
-                        // Rating Buttons with Labels
-                        HStack(spacing: 10) {
-                            ForEach(0 ..< 6) { quality in
-                                Button(action: {
-                                    updateFlashcardStatus(flashcard: currentFlashcard, quality: quality)
-                                    provideHapticFeedback()
-                                    showNextFlashcard()
-                                }) {
-                                    VStack {
-                                        Text("\(quality)")
-                                            .font(.headline)
-                                        Text(ratingLabel(for: quality))
-                                            .font(.caption)
-                                    }
-                                    .frame(width: 60, height: 60)
-                                    .background(Color.blue.opacity(0.1))
-                                    .cornerRadius(8)
-                                }
-                            }
-                        }
-                    } else {
-                        Text("Tap to reveal the answer")
-                            .foregroundColor(.gray)
-                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
                     }
                 }
-                .onTapGesture {
-                    withAnimation {
-                        isAnswerShown.toggle()
-                    }
-                }
-
-                Spacer()
-            } else {
-                // No Cards to Study View
-                Text("No cards to study")
+            } else if sessionCompleted {
+                // Session Completed
+                Text("You've completed all cards for today!")
                     .font(.title)
                     .padding()
+
+                Button(action: restartSession) {
+                    Text("Restart Session")
+                        .font(.headline)
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                }
+            } else {
+                // Session In Progress
+                VStack {
+                    // Current card number
+                    Text("Card \(currentIndex + 1) of \(totalCards)")
+                        .font(.headline)
+                        .padding()
+
+                    // Flashcard content
+                    VStack {
+                        Text(sessionFlashcards[currentIndex].frontText)
+                            .font(.title)
+                            .padding()
+                            .onTapGesture {
+                                withAnimation {
+                                    isAnswerShown.toggle()
+                                }
+                            }
+
+                        if isAnswerShown {
+                            Divider()
+                                .padding(.vertical)
+
+                            Text(sessionFlashcards[currentIndex].backText)
+                                .font(.title2)
+                                .padding()
+
+                            if let imageData = sessionFlashcards[currentIndex].image,
+                               let uiImage = UIImage(data: imageData)
+                            {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxHeight: 200)
+                                    .padding()
+                            }
+
+                            // Rating Buttons
+                            HStack(spacing: 10) {
+                                ForEach(0 ..< 6) { quality in
+                                    Button(action: {
+                                        updateFlashcardStatus(flashcard: sessionFlashcards[currentIndex], quality: quality)
+                                        provideHapticFeedback()
+                                        showNextFlashcard()
+                                    }) {
+                                        VStack {
+                                            Text("\(quality)")
+                                                .font(.headline)
+                                            Text(ratingLabel(for: quality))
+                                                .font(.caption)
+                                        }
+                                        .frame(width: 60, height: 60)
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(8)
+                                    }
+                                }
+                            }
+                        } else {
+                            Text("Tap to reveal the answer")
+                                .foregroundColor(.gray)
+                                .padding()
+                        }
+                    }
+                }
             }
         }
         .navigationTitle("Study Mode")
-        .onChange(of: currentIndex) { _ in
-            isAnswerShown = false
-        }
         .onAppear {
-            sessionFlashcards = dueFlashcards
-            if sessionFlashcards.isEmpty {
+            if dueFlashcards.isEmpty {
                 sessionCompleted = true
             }
         }
     }
 
     // MARK: - Helper Functions
+
+    private func startSession() {
+        sessionFlashcards = dueFlashcards
+        currentIndex = 0
+        isAnswerShown = false
+        sessionStarted = true
+        sessionCompleted = sessionFlashcards.isEmpty
+    }
+
+    private func showNextFlashcard() {
+        withAnimation {
+            isAnswerShown = false
+            if currentIndex < sessionFlashcards.count - 1 {
+                currentIndex += 1
+            } else {
+                sessionCompleted = true
+            }
+        }
+    }
+
+    private func restartSession() {
+        sessionStarted = false
+        sessionCompleted = false
+        currentIndex = 0
+        isAnswerShown = false
+    }
 
     private func updateFlashcardStatus(flashcard: Flashcard, quality: Int) {
         // Implementation of SM-2 Algorithm
@@ -170,22 +196,6 @@ struct StudyView: View {
         flashcard.reviewDate = Calendar.current.date(byAdding: .day, value: interval, to: Date()) ?? Date()
 
         try? modelContext.save()
-    }
-
-    private func showNextFlashcard() {
-        withAnimation {
-            if currentIndex < sessionFlashcards.count - 1 {
-                currentIndex += 1
-            } else {
-                sessionCompleted = true
-            }
-        }
-    }
-
-    private func restartSession() {
-        currentIndex = 0
-        sessionCompleted = false
-        isAnswerShown = false
     }
 
     private func ratingLabel(for quality: Int) -> String {
