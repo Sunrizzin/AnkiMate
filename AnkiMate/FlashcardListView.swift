@@ -90,8 +90,36 @@ struct FlashcardListView: View {
     }
 
     private func deleteFlashcard(_ flashcard: Flashcard) {
+        // Сохраняем связанные теги перед удалением карточки
+        let associatedTags = flashcard.tags
+
+        // Удаляем карточку
         modelContext.delete(flashcard)
-        try? modelContext.save()
+
+        // Сохраняем контекст, чтобы изменения вступили в силу
+        do {
+            try modelContext.save()
+        } catch {
+            print("Ошибка при сохранении после удаления карточки: \(error)")
+            return
+        }
+
+        // Проверяем каждый связанный тег
+        for tag in associatedTags {
+            // Так как мы уже удалили карточку и сохранили контекст,
+            // связи обновлены, и мы можем проверить, остались ли связанные карточки
+            if tag.flashcards.isEmpty {
+                // Если у тега больше нет связанных карточек, удаляем его
+                modelContext.delete(tag)
+            }
+        }
+
+        // Сохраняем контекст после удаления тегов
+        do {
+            try modelContext.save()
+        } catch {
+            print("Ошибка при сохранении после удаления тегов: \(error)")
+        }
     }
 
     private func filteredFlashcards() -> [Flashcard] {

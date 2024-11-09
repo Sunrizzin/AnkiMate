@@ -13,7 +13,7 @@ final class Flashcard {
     @Attribute(.unique) var id: UUID = UUID()
     var frontText: String
     var backText: String
-    var tags: [Tag]
+    var tags: [Tag] = []
     var image: Data?
     var reviewDate: Date
     var easinessFactor: Double
@@ -36,6 +36,7 @@ final class Flashcard {
 final class Tag {
     @Attribute(.unique) var id: UUID = UUID()
     var name: String
+    var flashcards: [Flashcard] = []
 
     init(name: String) {
         self.name = name

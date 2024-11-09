@@ -18,7 +18,7 @@ struct TagView: View {
             .padding(6)
             .background(isSelected ? Color.accentColor : .gray)
             .cornerRadius(10)
-            .foregroundColor(isSelected ? .white : .black)
+            .foregroundColor(.white)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.accentColor, lineWidth: isSelected ? 2 : 0)
