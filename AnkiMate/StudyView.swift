@@ -14,14 +14,15 @@ struct StudyView: View {
     @State private var currentIndex = 0
     @State private var isAnswerShown = false
     @State private var sessionCompleted = false
+    @State private var sessionFlashcards: [Flashcard] = []
 
     var dueFlashcards: [Flashcard] {
         flashcards.filter { $0.reviewDate <= Date() }
     }
 
     var progress: Double {
-        guard !dueFlashcards.isEmpty else { return 0 }
-        return Double(currentIndex) / Double(dueFlashcards.count)
+        guard !sessionFlashcards.isEmpty else { return 0 }
+        return Double(currentIndex) / Double(sessionFlashcards.count)
     }
 
     var body: some View {
@@ -30,7 +31,7 @@ struct StudyView: View {
                 .padding()
                 .accentColor(.green)
                 .progressViewStyle(LinearProgressViewStyle())
-                .opacity(dueFlashcards.isEmpty ? 0 : 1)
+                .opacity(sessionFlashcards.isEmpty ? 0 : 1)
 
             if sessionCompleted {
                 // Session Completion View
@@ -57,8 +58,8 @@ struct StudyView: View {
                         }
                     }
                 }
-            } else if !dueFlashcards.isEmpty, currentIndex < dueFlashcards.count {
-                let currentFlashcard = dueFlashcards[currentIndex]
+            } else if !sessionFlashcards.isEmpty, currentIndex < sessionFlashcards.count {
+                let currentFlashcard = sessionFlashcards[currentIndex]
 
                 VStack {
                     Text(currentFlashcard.frontText)
@@ -105,7 +106,6 @@ struct StudyView: View {
                                 }
                             }
                         }
-                        .padding()
                     } else {
                         Text("Tap to reveal the answer")
                             .foregroundColor(.gray)
@@ -130,8 +130,9 @@ struct StudyView: View {
         .onChange(of: currentIndex) { _ in
             isAnswerShown = false
         }
-        .onChange(of: dueFlashcards.count) { _ in
-            if dueFlashcards.isEmpty {
+        .onAppear {
+            sessionFlashcards = dueFlashcards
+            if sessionFlashcards.isEmpty {
                 sessionCompleted = true
             }
         }
@@ -173,7 +174,7 @@ struct StudyView: View {
 
     private func showNextFlashcard() {
         withAnimation {
-            if currentIndex < dueFlashcards.count - 1 {
+            if currentIndex < sessionFlashcards.count - 1 {
                 currentIndex += 1
             } else {
                 sessionCompleted = true
