@@ -149,25 +149,57 @@ struct AddFlashcardView: View {
     }
 
     private func saveFlashcard() {
-        let tags = Array(selectedTags)
+        let newTags = Array(selectedTags)
+        var oldTags: [Tag] = []
 
         if let flashcard = flashcardToEdit {
+            // Сохраняем старые теги перед обновлением
+            oldTags = flashcard.tags
+
+            // Обновляем свойства карточки
             flashcard.frontText = frontText
             flashcard.backText = backText
-            flashcard.tags = tags
+            flashcard.tags = newTags
             flashcard.image = image
         } else {
             let newFlashcard = Flashcard(
                 frontText: frontText,
                 backText: backText,
-                tags: tags,
+                tags: newTags,
                 image: image,
                 reviewDate: .now
             )
             modelContext.insert(newFlashcard)
         }
 
-        try? modelContext.save()
+        // Сохраняем контекст после обновления карточки
+        do {
+            try modelContext.save()
+        } catch {
+            print("Ошибка при сохранении карточки: \(error)")
+            // Вы можете добавить отображение ошибки пользователю
+            return
+        }
+
+        // Находим теги, которые были удалены из карточки
+        let removedTags = oldTags.filter { !newTags.contains($0) }
+
+        // Проверяем каждый удаленный тег
+        for tag in removedTags {
+            if tag.flashcards.isEmpty {
+                // Если у тега больше нет связанных карточек, удаляем его
+                modelContext.delete(tag)
+            }
+        }
+
+        // Сохраняем контекст после удаления тегов
+        do {
+            try modelContext.save()
+        } catch {
+            print("Ошибка при сохранении после удаления тегов: \(error)")
+            // Вы можете добавить отображение ошибки пользователю
+        }
+
         showSaveSuccess = true
     }
 

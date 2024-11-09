@@ -35,6 +35,9 @@ struct FlashcardListView: View {
                     }
             }
         }
+        .onAppear(perform: {
+            deleteUnusedTags()
+        })
         .navigationTitle("Anki Mate")
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
@@ -82,6 +85,28 @@ struct FlashcardListView: View {
         }
         .searchable(text: $searchText, prompt: "Search flashcards")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
+    }
+
+    private func deleteUnusedTags() {
+        // Получаем все теги из контекста
+        let fetchDescriptor = FetchDescriptor<Tag>()
+
+        do {
+            let allTags = try modelContext.fetch(fetchDescriptor)
+
+            for tag in allTags {
+                if tag.flashcards.isEmpty {
+                    // Если у тега нет связанных карточек, удаляем его
+                    modelContext.delete(tag)
+                }
+            }
+
+            // Сохраняем контекст после удаления тегов
+            try modelContext.save()
+        } catch {
+            print("Ошибка при удалении неиспользуемых тегов: \(error)")
+            // Здесь можно добавить отображение ошибки пользователю
+        }
     }
 
     private func editFlashcard(_ flashcard: Flashcard) {
